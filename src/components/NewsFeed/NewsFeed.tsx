@@ -50,15 +50,15 @@ const DUMMY_DATA: ArticleType[] = [
 ];
 
 const NewsFeed: React.FC = () => {
-  const [filteredData, setFilteredData] = useState<ArticleType[]>(DUMMY_DATA);
+  const [filteredData, setFilteredData] = useState<ArticleType[]>(DUMMY_DATA); // Change DUMMY_DATA
 
-  const { guardianData, guardianError, guardianIsLoading } = useAPIFetcher(
+  const { guardianData, guardianIsLoading } = useAPIFetcher(
     "https://content.guardianapis.com/search?api-key=3c191f36-fd67-4548-b174-7869ebc458e7"
   );
-  const { newsApiData, newsApiError, newsApiIsLoading } = useAPIFetcher(
+  const { newsApiData, newsApiIsLoading } = useAPIFetcher(
     "https://newsapi.org/v2/everything?q=Apple&from=2023-11-12&sortBy=popularity&apiKey=34b87083a4eb404ca6842d44e7a0e85a"
   );
-  const { nyData, nyError, nyIsLoading } = useAPIFetcher(
+  const { nyData, nyIsLoading } = useAPIFetcher(
     "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=d45lnRXfEusOYGrhiU9LZFJl3AzG7R24"
   );
 
@@ -69,16 +69,20 @@ const NewsFeed: React.FC = () => {
   return (
     <>
       <NewsFilters data={DUMMY_DATA} updateData={setFilteredDataHandler} />
-      {filteredData.map((article, key) => (
-        <ArticleCard
-          key={key}
-          title={article.title}
-          date={article.date}
-          source={article.source}
-          category={article.category}
-          author={article.author}
-        />
-      ))}
+      {guardianIsLoading && newsApiIsLoading && nyIsLoading ? (
+        <h3>Loading ...</h3>
+      ) : (
+        filteredData.map((article, key) => (
+          <ArticleCard
+            key={key}
+            title={article.title}
+            date={article.date}
+            source={article.source}
+            category={article.category}
+            author={article.author}
+          />
+        ))
+      )}
     </>
   );
 };

@@ -25,7 +25,6 @@ type ArticleType =
 
 const useAPIFetcher = (url: string) => {
   const [data, setData] = useState<unknown | null>(null);
-  const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -35,7 +34,7 @@ const useAPIFetcher = (url: string) => {
         const responseData = await axios.get(url);
         setData(responseData);
       } catch (error: any | unknown) {
-        setError(error);
+        console.error("Fetching Data Failed!");
       } finally {
         setIsLoading(false);
       }
@@ -44,7 +43,7 @@ const useAPIFetcher = (url: string) => {
     fetchData();
   }, [url]);
 
-  return { data, error, isLoading };
+  return { data, isLoading };
 };
 
 export default useAPIFetcher;
