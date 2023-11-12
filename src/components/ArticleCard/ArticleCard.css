@@ -1,0 +1,34 @@
+.article-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin: 16px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.article-card:hover {
+  transform: scale(1.006);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.article-card h1 {
+  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.article-details {
+  margin-top: 8px;
+  text-align: left;
+}
+
+.article-details strong {
+  color: #555;
+  margin-right: 4px;
+}
+
+.article-details span {
+  color: #777;
+}
