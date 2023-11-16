@@ -56,13 +56,19 @@ const NewsFeed: React.FC = () => {
   const [filteredData, setFilteredData] = useState<ArticleType[]>();
 
   const { data: guardianData, isLoading: guardianIsLoading } = useAPIFetcher(
-    "https://content.guardianapis.com/search?api-key=3c191f36-fd67-4548-b174-7869ebc458e7"
+    `https://content.guardianapis.com/search?api-key=${
+      import.meta.env.VITE_THE_G_API_KEY
+    }`
   );
   const { data: newsApiData, isLoading: newsApiIsLoading } = useAPIFetcher(
-    "https://newsapi.org/v2/top-headlines?country=us&apiKey=34b87083a4eb404ca6842d44e7a0e85a"
+    `https://newsapi.org/v2/top-headlines?country=us&apiKey=${
+      import.meta.env.VITE_NEWS_API_KEY
+    }`
   );
   const { data: nyData, isLoading: nyIsLoading } = useAPIFetcher(
-    "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=d45lnRXfEusOYGrhiU9LZFJl3AzG7R24"
+    `https://api.nytimes.com/svc/news/v3/content/all/all.json?api-key=${
+      import.meta.env.VITE_NY_API_KEY
+    }`
   );
 
   useEffect(() => {
@@ -97,6 +103,7 @@ const NewsFeed: React.FC = () => {
   ]);
 
   function setFilteredDataHandler(currentData: ArticleType[]) {
+    console.log("filtered", currentData);
     setFilteredData(currentData);
   }
 
@@ -108,8 +115,8 @@ const NewsFeed: React.FC = () => {
       />
       {guardianIsLoading && newsApiIsLoading && nyIsLoading ? (
         <h3>Loading ...</h3>
-      ) : (
-        filteredData?.map((article, key) => (
+      ) : filteredData && filteredData.length !== 0 ? (
+        filteredData.map((article, key) => (
           <ArticleCard
             key={key}
             title={getArticleTitle(article)}
@@ -120,6 +127,8 @@ const NewsFeed: React.FC = () => {
             image={getArticleImage(article)}
           />
         ))
+      ) : (
+        <h3>Articles Not Found</h3>
       )}
     </>
   );
@@ -169,11 +178,11 @@ function getArticleSource(article: ArticleType): string {
   if (isTheGuardianArticle(article)) {
     return "The Guardian";
   } else if (isNewsAPIArticle(article)) {
-    return article.source?.name;
+    return article.source.name;
   } else if (isNYTimesArticle(article)) {
     return article.source;
   } else {
-    return "Source not found";
+    return "The Guardian";
   }
 }
 

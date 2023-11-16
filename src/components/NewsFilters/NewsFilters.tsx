@@ -35,10 +35,13 @@ const NewsFilters = ({ data, updateData }) => {
       const isSourceMatch =
         selectedSource === "" || article.source === selectedSource;
 
+      const check = formatDate(article.pub_date);
+      console.log(check);
       const isDateMatch =
         selectedDate === "" ||
         formatDate(article.publishedAt) === selectedDate ||
-        formatDate(article.webPublicationDate) === selectedDate;
+        formatDate(article.webPublicationDate) === selectedDate ||
+        formatDate(article.pub_date) === selectedDate;
 
       return isCategoryMatch && isSourceMatch && isDateMatch;
     });
@@ -66,7 +69,7 @@ const NewsFilters = ({ data, updateData }) => {
           <option value="News">News</option>
           <option value="Politics">Politics</option>
           <option value="Sport">Sport</option>
-          <option value="Art">Art</option>
+          <option value="Arts">Arts</option>
           <option value="Opinion">Opinion</option>
         </select>
         <select
@@ -76,7 +79,7 @@ const NewsFilters = ({ data, updateData }) => {
           <option value="">All Sources</option>
           <option value="The Guardian">The Guardian</option>
           <option value="NewsAPI">NewsAPI</option>
-          <option value="New York Times">New York Times</option>
+          <option value="The New York Times">The New York Times</option>
         </select>
         <input
           type="date"
