@@ -1,13 +1,7 @@
 import { useState } from "react";
 import "./NewsFilters.css";
-
-// type ArticleType = {
-//   title: string;
-//   date: string;
-//   source: string;
-//   category: string;
-//   author: string;
-// };
+import { ArticleType } from "../NewsFeed/NewsFeed";
+import { formatDate } from "../../utils/helperFunctions";
 
 const NewsFilters = ({ data, updateData }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -17,7 +11,7 @@ const NewsFilters = ({ data, updateData }) => {
 
   function searchArticleHandler(): void {
     console.log("data: ", data);
-    const filteredArticles = data.filter((article) => {
+    const filteredArticles = data.filter((article: ArticleType) => {
       const articleTitle =
         article.title || article.webTitle || article.abstract;
 
@@ -29,14 +23,26 @@ const NewsFilters = ({ data, updateData }) => {
     updateData(filteredArticles);
   }
 
-  // Fix the category
   function filterDataHandler(): void {
-    const filteredArticles = data.filter(
-      (article) =>
-        (selectedCategory === "" || article.category === selectedCategory) &&
-        (selectedSource === "" || article.source === selectedSource) &&
-        (selectedDate === "" || article.date === selectedDate)
-    );
+    const filteredArticles = data.filter((article: ArticleType) => {
+      const isCategoryMatch =
+        selectedCategory === "" ||
+        article.pillarName === selectedCategory ||
+        article.sectionName === selectedCategory ||
+        article.subsection_name === selectedCategory ||
+        article.news_desk === selectedCategory;
+
+      const isSourceMatch =
+        selectedSource === "" || article.source === selectedSource;
+
+      const isDateMatch =
+        selectedDate === "" ||
+        formatDate(article.publishedAt) === selectedDate ||
+        formatDate(article.webPublicationDate) === selectedDate;
+
+      return isCategoryMatch && isSourceMatch && isDateMatch;
+    });
+
     updateData(filteredArticles);
   }
 
@@ -58,7 +64,10 @@ const NewsFilters = ({ data, updateData }) => {
         >
           <option value="">All Categories</option>
           <option value="News">News</option>
+          <option value="Politics">Politics</option>
           <option value="Sport">Sport</option>
+          <option value="Art">Art</option>
+          <option value="Opinion">Opinion</option>
         </select>
         <select
           value={selectedSource}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ArticleCard from "../ArticleCard/ArticleCard";
 import NewsFilters from "../NewsFilters/NewsFilters";
 import useAPIFetcher from "../../utils/useAPIFetcher";
+import { shuffleArray, formatDate } from "../../utils/helperFunctions";
 
 type TheGuardianArticleType = {
   id: string;
@@ -38,9 +39,12 @@ type NYTimesArticleType = {
   subsection_name: string;
   uri: string;
   web_url: string;
+  byline: { original: string }; // author
+  multimedia: { url: string };
+  type_of_material: string;
 };
 
-type ArticleType =
+export type ArticleType =
   | TheGuardianArticleType
   | NewsAPIArticleType
   | NYTimesArticleType;
@@ -55,33 +59,41 @@ const NewsFeed: React.FC = () => {
     "https://content.guardianapis.com/search?api-key=3c191f36-fd67-4548-b174-7869ebc458e7"
   );
   const { data: newsApiData, isLoading: newsApiIsLoading } = useAPIFetcher(
-    "https://newsapi.org/v2/everything?q=Apple&from=2023-11-12&sortBy=popularity&apiKey=34b87083a4eb404ca6842d44e7a0e85a"
+    "https://newsapi.org/v2/top-headlines?country=us&apiKey=34b87083a4eb404ca6842d44e7a0e85a"
   );
-  //   const { data: nyData, isLoading: nyIsLoading } = useAPIFetcher(
-  //     "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=d45lnRXfEusOYGrhiU9LZFJl3AzG7R24"
-  //   );
+  const { data: nyData, isLoading: nyIsLoading } = useAPIFetcher(
+    "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=d45lnRXfEusOYGrhiU9LZFJl3AzG7R24"
+  );
 
   useEffect(() => {
-    if (!guardianIsLoading && !newsApiIsLoading) {
-      // && !nyIsLoading
-      console.log(guardianData);
-      console.log(newsApiData);
-      //   console.log(nyData);
+    if (
+      !guardianIsLoading &&
+      !newsApiIsLoading &&
+      !nyIsLoading &&
+      guardianData &&
+      newsApiData &&
+      nyData
+    ) {
+      console.log("Guardian", guardianData);
+      console.log("NewsAPI", newsApiData);
+      console.log("NY", nyData);
+
       const mergedData = [
         ...guardianData.data.response.results,
         ...newsApiData.data.articles,
-        // ...nyData?.data?.response?.docs,
+        ...nyData.data.response.docs,
       ];
-      setMergedArticlesData(mergedData);
+
+      setMergedArticlesData(shuffleArray(mergedData));
       setFilteredData(mergedData);
     }
   }, [
     guardianData,
     newsApiData,
-    // nyData,
+    nyData,
     guardianIsLoading,
     newsApiIsLoading,
-    // nyIsLoading,
+    nyIsLoading,
   ]);
 
   function setFilteredDataHandler(currentData: ArticleType[]) {
@@ -94,25 +106,18 @@ const NewsFeed: React.FC = () => {
         data={mergedArticlesData}
         updateData={setFilteredDataHandler}
       />
-      {/* && nyIsLoading */}
-      {guardianIsLoading && newsApiIsLoading ? (
+      {guardianIsLoading && newsApiIsLoading && nyIsLoading ? (
         <h3>Loading ...</h3>
       ) : (
         filteredData?.map((article, key) => (
           <ArticleCard
             key={key}
-            title={article.webTitle || article.title || article.abstract}
-            date={
-              article.webPublicationDate ||
-              article.publishedAt ||
-              article.pub_date
-            }
-            // source={article.source.name || article.source || "The Guardian"}
-            source={"Source"}
-            category={
-              article.pillarName || article.subsection_name || "NewsAPICategory"
-            }
-            author={article.author || "Author not found"}
+            title={getArticleTitle(article)}
+            date={formatDate(getArticleDate(article))}
+            source={getArticleSource(article)}
+            category={getArticleCategory(article)}
+            author={getArticleAuthor(article)}
+            image={getArticleImage(article)}
           />
         ))
       )}
@@ -122,40 +127,88 @@ const NewsFeed: React.FC = () => {
 
 export default NewsFeed;
 
-// const DUMMY_DATA: ArticleType[] = [
-//   {
-//     title: "The Future of Technology: A Glimpse Into Tomorrow",
-//     date: "2023-11-12",
-//     source: "Tech Insights Magazine",
-//     category: "Technology",
-//     author: "John Smith",
-//   },
-//   {
-//     title: "Healthy Living: Tips for a Balanced Lifestyle",
-//     date: "2023-11-13",
-//     source: "Wellness Times",
-//     category: "Health",
-//     author: "Jane Doe",
-//   },
-//   {
-//     title: "Exploring the Wonders of Space Travel",
-//     date: "2023-11-14",
-//     source: "Cosmic Discoveries Journal",
-//     category: "Science",
-//     author: "Dr. Astronaut",
-//   },
-//   {
-//     title: "Artificial Intelligence: Transforming Industries",
-//     date: "2023-11-15",
-//     source: "Tech Insights Magazine",
-//     category: "Technology",
-//     author: "Alex Roboto",
-//   },
-//   {
-//     title: "Culinary Adventures: A Taste of Exotic Cuisines",
-//     date: "2023-11-16",
-//     source: "Wellness Times",
-//     category: "Health",
-//     author: "Chef Gourmet",
-//   },
-// ];
+function isTheGuardianArticle(
+  article: ArticleType
+): article is TheGuardianArticleType {
+  return "sectionName" in article;
+}
+
+function isNewsAPIArticle(article: ArticleType): article is NewsAPIArticleType {
+  return "content" in article;
+}
+
+function isNYTimesArticle(article: ArticleType): article is NYTimesArticleType {
+  return "_id" in article;
+}
+
+function getArticleTitle(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return article.webTitle;
+  } else if (isNewsAPIArticle(article)) {
+    return article.title;
+  } else if (isNYTimesArticle(article)) {
+    return article.abstract;
+  } else {
+    return "Title not found";
+  }
+}
+
+function getArticleDate(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return article.webPublicationDate;
+  } else if (isNewsAPIArticle(article)) {
+    return article.publishedAt;
+  } else if (isNYTimesArticle(article)) {
+    return article.pub_date;
+  } else {
+    return "Date not found";
+  }
+}
+
+function getArticleSource(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return "The Guardian";
+  } else if (isNewsAPIArticle(article)) {
+    return article.source?.name;
+  } else if (isNYTimesArticle(article)) {
+    return article.source;
+  } else {
+    return "Source not found";
+  }
+}
+
+function getArticleCategory(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return article.pillarName;
+  } else if (isNewsAPIArticle(article)) {
+    return "News";
+  } else if (isNYTimesArticle(article)) {
+    return article.type_of_material;
+  } else {
+    return "Category not found";
+  }
+}
+
+function getArticleAuthor(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return "Author not found";
+  } else if (isNewsAPIArticle(article)) {
+    return article.author;
+  } else if (isNYTimesArticle(article)) {
+    return article.byline.original;
+  } else {
+    return "Author not found";
+  }
+}
+
+function getArticleImage(article: ArticleType): string {
+  if (isTheGuardianArticle(article)) {
+    return "";
+  } else if (isNewsAPIArticle(article)) {
+    return article.urlToImage;
+  } else if (isNYTimesArticle(article)) {
+    return article.multimedia?.url;
+  } else {
+    return "";
+  }
+}
